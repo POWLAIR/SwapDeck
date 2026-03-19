@@ -1,4 +1,5 @@
 const { defineConfig, devices } = require('@playwright/test');
+const path = require('path');
 
 module.exports = defineConfig({
   testDir: './',
@@ -16,6 +17,7 @@ module.exports = defineConfig({
   ],
   webServer: {
     command: 'node backend/src/server.js',
+    cwd: path.join(__dirname, '../..'),
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
