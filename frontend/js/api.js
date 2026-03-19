@@ -35,6 +35,7 @@ export const api = {
     return apiFetch(`/cards${params ? '?' + params : ''}`);
   },
   getCard: (id) => apiFetch(`/cards/${id}`),
+  getTradesByCard: (cardId) => apiFetch(`/cards/${cardId}/trades`),
 
   // Trades
   createTrade: (data) => apiFetch('/trades', { method: 'POST', body: data }),

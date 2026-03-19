@@ -96,11 +96,8 @@ test.describe('Négociation — cas usuels', () => {
     await page.goto(`/#trade/${tradeId}`);
     await page.waitForSelector('.thread-header');
 
+    page.once('dialog', (dialog) => dialog.accept());
     await page.click('#btn-accept');
-    await page.waitForTimeout(300);
-
-    // Confirmation dialog
-    page.on('dialog', (dialog) => dialog.accept());
 
     // Le badge doit passer à "Accepté"
     await expect(page.locator('.badge-accepted')).toBeVisible({ timeout: 5000 });

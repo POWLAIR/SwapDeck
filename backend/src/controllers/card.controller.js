@@ -1,4 +1,5 @@
 const CardService = require('../services/card.service');
+const NegotiationQueryService = require('../services/NegotiationQueryService');
 
 async function getAll(req, res, next) {
   try {
@@ -24,4 +25,16 @@ async function getOne(req, res, next) {
   }
 }
 
-module.exports = { getAll, getOne };
+async function getTrades(req, res, next) {
+  try {
+    const trades = await NegotiationQueryService.getTradesByCard(
+      parseInt(req.params.id),
+      req.user.id
+    );
+    res.json({ trades });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAll, getOne, getTrades };

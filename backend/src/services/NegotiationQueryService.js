@@ -86,6 +86,33 @@ async function getNegotiationThread(tradeId, requestorId) {
 }
 
 /**
+ * Retourne toutes les négociations impliquant une carte donnée.
+ * Couvre les trades où la carte est offerte ou demandée.
+ * @param {number} cardId
+ * @param {number} requestorId - doit être participant ou propriétaire de la carte
+ */
+async function getTradesByCard(cardId, requestorId) {
+  const trades = await prisma.trade.findMany({
+    where: {
+      tradeCards: { some: { cardId } },
+      OR: [{ initiatorId: requestorId }, { recipientId: requestorId }],
+    },
+    include: {
+      initiator: { select: { id: true, name: true, handle: true, avatar: true } },
+      recipient: { select: { id: true, name: true, handle: true, avatar: true } },
+      tradeCards: {
+        where: { cardId },
+        include: { card: { select: { id: true, name: true, game: true } } },
+      },
+      _count: { select: { messages: true } },
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  return trades;
+}
+
+/**
  * Retourne les messages d'une trade, triés par date croissante.
  */
 async function getTradeMessages(tradeId, requestorId) {
@@ -150,6 +177,7 @@ function _tradeIncludes() {
 module.exports = {
   getTradeById,
   getTradesForUser,
+  getTradesByCard,
   getNegotiationThread,
   getTradeMessages,
 };

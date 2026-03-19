@@ -10,6 +10,7 @@
 jest.mock('../../backend/src/config/db', () => ({
   trade:   { findUnique: jest.fn(), findMany: jest.fn(), count: jest.fn() },
   message: { findMany: jest.fn() },
+  card:    { findMany: jest.fn() },
 }));
 
 const prisma = require('../../backend/src/config/db');
@@ -164,6 +165,35 @@ describe('getTradeMessages', () => {
   it('lève NOT_FOUND si la trade est introuvable', async () => {
     prisma.trade.findUnique.mockResolvedValue(null);
     await expect(service.getTradeMessages(999, 1)).rejects.toThrow('NOT_FOUND');
+  });
+});
+
+// ──────────────────────────────────────────────
+// getTradesByCard
+// ──────────────────────────────────────────────
+describe('getTradesByCard', () => {
+  it('retourne les trades impliquant une carte pour un participant', async () => {
+    const trades = [makeTrade(), makeTrade({ id: 2 })];
+    prisma.trade.findMany.mockResolvedValue(trades);
+
+    const result = await service.getTradesByCard(10, 1);
+
+    expect(prisma.trade.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tradeCards: { some: { cardId: 10 } },
+          OR: [{ initiatorId: 1 }, { recipientId: 1 }],
+        }),
+      })
+    );
+    expect(result).toHaveLength(2);
+  });
+
+  it('retourne un tableau vide si aucune trade ne concerne cette carte', async () => {
+    prisma.trade.findMany.mockResolvedValue([]);
+
+    const result = await service.getTradesByCard(999, 1);
+    expect(result).toHaveLength(0);
   });
 });
 
