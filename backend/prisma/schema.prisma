@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CardGame {
+  POKEMON
+  MAGIC
+  YUGIOH
+  DIGIMON
+  OTHER
+}
+
+enum Rarity {
+  COMMON
+  UNCOMMON
+  RARE
+  ULTRA_RARE
+  SECRET_RARE
+}
+
+enum TradeStatus {
+  PENDING    // Proposition envoyée, en attente de réponse
+  ACCEPTED   // Acceptée par le destinataire
+  REFUSED    // Refusée par le destinataire
+  COUNTERED  // Contre-proposition émise (une nouvelle Trade liée existe)
+  CANCELLED  // Annulée par l'initiateur
+}
+
+enum MessageAction {
+  PROPOSE
+  ACCEPT
+  REFUSE
+  COUNTER
+  COMMENT
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  handle    String   @unique
+  avatar    String?
+  createdAt DateTime @default(now())
+
+  cards          Card[]
+  tradesSent     Trade[]   @relation("Initiator")
+  tradesReceived Trade[]   @relation("Recipient")
+  messages       Message[]
+}
+
+model Card {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  game        CardGame
+  rarity      Rarity   @default(COMMON)
+  imageUrl    String   @default("/assets/placeholder-card.png")
+  ownerId     Int
+  createdAt   DateTime @default(now())
+
+  owner       User        @relation(fields: [ownerId], references: [id])
+  tradeCards  TradeCard[]
+}
+
+model Trade {
+  id            Int         @id @default(autoincrement())
+  initiatorId   Int
+  recipientId   Int
+  status        TradeStatus @default(PENDING)
+  parentTradeId Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  initiator   User        @relation("Initiator", fields: [initiatorId], references: [id])
+  recipient   User        @relation("Recipient", fields: [recipientId], references: [id])
+  parentTrade Trade?      @relation("CounterChain", fields: [parentTradeId], references: [id])
+  counters    Trade[]     @relation("CounterChain")
+  tradeCards  TradeCard[]
+  messages    Message[]
+}
+
+model TradeCard {
+  id        Int    @id @default(autoincrement())
+  tradeId   Int
+  cardId    Int
+  direction String // "OFFERED" | "REQUESTED"
+
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  card  Card  @relation(fields: [cardId], references: [id])
+
+  @@unique([tradeId, cardId])
+}
+
+model Message {
+  id        Int           @id @default(autoincrement())
+  tradeId   Int
+  authorId  Int
+  body      String
+  action    MessageAction @default(COMMENT)
+  createdAt DateTime      @default(now())
+
+  trade  Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id])
+}
