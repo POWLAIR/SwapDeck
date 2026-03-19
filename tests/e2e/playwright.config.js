@@ -18,6 +18,6 @@ module.exports = defineConfig({
     command: 'node backend/src/server.js',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 15_000,
+    timeout: 30_000,
   },
 });

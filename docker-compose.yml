@@ -1,0 +1,61 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────
+# SwapDeck — Stack de développement local
+#
+# Démarrage :
+#   docker compose up --build
+#
+# Premier lancement : seed automatique via le service migrate.
+# Réinitialisation :
+#   docker compose down -v && docker compose up --build
+# ─────────────────────────────────────────────────────
+
+services:
+
+  # ── Base de données PostgreSQL ─────────────────────
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER:     swapdeck
+      POSTGRES_PASSWORD: swapdeck
+      POSTGRES_DB:       swapdeck
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U swapdeck"]
+      interval: 5s
+      timeout:  5s
+      retries:  10
+
+  # ── Migration + Seed (s'arrête après exécution) ────
+  migrate:
+    build: .
+    command: >
+      sh -c "cd /app/backend &&
+             ./node_modules/.bin/prisma db push --accept-data-loss &&
+             node prisma/seed.js"
+    environment:
+      DATABASE_URL: postgresql://swapdeck:swapdeck@db:5432/swapdeck
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  # ── Application ────────────────────────────────────
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL:   postgresql://swapdeck:swapdeck@db:5432/swapdeck
+      SESSION_SECRET: dev-secret-change-in-production
+      PORT:           3000
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
