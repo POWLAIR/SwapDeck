@@ -1,0 +1,340 @@
+/* ===== Card Grid ===== */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.card-tile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.card-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.card-image {
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  width: 100%;
+  background: var(--color-surface-alt);
+}
+
+.card-image-placeholder {
+  aspect-ratio: 2/3;
+  background: linear-gradient(135deg, var(--color-surface-alt), var(--color-border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+.card-info {
+  padding: 0.75rem;
+}
+
+.card-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.card-owner {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.card-actions {
+  margin-top: 0.5rem;
+}
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-common      { background: #4a5568; color: #e2e8f0; }
+.badge-uncommon    { background: #276749; color: #9ae6b4; }
+.badge-rare        { background: #2b6cb0; color: #90cdf4; }
+.badge-ultra-rare  { background: #6b21a8; color: #d8b4fe; }
+.badge-secret-rare { background: #92400e; color: #fde68a; }
+
+.badge-pokemon  { background: #d69e2e; color: #0f1117; }
+.badge-magic    { background: #2b6cb0; color: #fff; }
+.badge-yugioh   { background: #6b21a8; color: #fff; }
+.badge-digimon  { background: #c53030; color: #fff; }
+.badge-other    { background: #4a5568; color: #fff; }
+
+.badge-pending   { background: #d69e2e; color: #0f1117; }
+.badge-accepted  { background: #276749; color: #9ae6b4; }
+.badge-refused   { background: #c53030; color: #fff; }
+.badge-countered { background: #6b21a8; color: #d8b4fe; }
+.badge-cancelled { background: #4a5568; color: #e2e8f0; }
+
+/* ===== Trade List ===== */
+.trade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trade-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trade-item:hover {
+  background: var(--color-surface-alt);
+}
+
+.trade-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.trade-item-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.trade-item-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.trade-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ===== Negotiation Thread ===== */
+.thread-header {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.thread-cards {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.thread-cards-side {
+  flex: 1;
+}
+
+.thread-cards-side h4 {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+.thread-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.thread-separator {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.thread-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.message-bubble {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+
+.message-bubble.mine {
+  align-self: flex-end;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.message-bubble.theirs {
+  align-self: flex-start;
+  background: var(--color-surface-alt);
+}
+
+.message-bubble.system {
+  align-self: center;
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+  max-width: 60%;
+}
+
+.message-author {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-bottom: 0.2rem;
+}
+
+.message-time {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+.thread-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Trade Form ===== */
+.trade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.trade-form-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.panel h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.card-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.card-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.card-checkbox-item:hover {
+  background: var(--color-surface);
+}
+
+.card-checkbox-item input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+
+/* ===== User Picker ===== */
+.user-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem;
+  background: var(--color-surface-alt);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  transition: all 0.15s;
+}
+
+.user-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.user-btn .user-avatar {
+  font-size: 2rem;
+}
+
+.user-btn .user-specialty {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .trade-form-panels {
+    grid-template-columns: 1fr;
+  }
+}
