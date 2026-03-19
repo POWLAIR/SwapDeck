@@ -24,8 +24,7 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": [
-      "../tests/unit/**/*.test.js"
-    ]
+    "roots": ["<rootDir>/../tests/unit"],
+    "testMatch": ["**/*.test.js"]
   }
 }
