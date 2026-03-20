@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwapDeck 🃏</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+</head>
+<body>
+  <!-- Auth overlay -->
+  <div id="auth-overlay" class="auth-overlay hidden">
+    <div class="auth-box">
+      <h1>SwapDeck 🃏</h1>
+      <p class="auth-subtitle">Plateforme de troc de cartes — sans argent, tout par l'échange</p>
+      <h2>Qui êtes-vous ?</h2>
+      <div id="user-picker" class="user-picker"></div>
+    </div>
+  </div>
+
+  <!-- Main app (hidden until logged in) -->
+  <div id="app" class="app hidden">
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🃏</span>
+        <span class="brand-name">SwapDeck</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#catalog" class="nav-link" data-page="catalog">📖 Catalogue</a></li>
+        <li><a href="#collection" class="nav-link" data-page="collection">🗂️ Ma collection</a></li>
+        <li><a href="#trades" class="nav-link" data-page="trades">🔄 Mes échanges</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div id="current-user" class="current-user"></div>
+        <button id="btn-logout" class="btn btn-sm btn-ghost">Déconnexion</button>
+      </div>
+    </nav>
+
+    <main id="main-content" class="main-content">
+      <div class="loading-state">Chargement…</div>
+    </main>
+  </div>
+
+  <!-- Modal générique -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <button id="modal-close" class="modal-close">&times;</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/api.js"></script>
+  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/catalog.js"></script>
+  <script type="module" src="/js/trade.js"></script>
+  <script type="module" src="/js/negotiation.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
