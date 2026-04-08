@@ -29,7 +29,7 @@ test.describe('Négociation — cas usuels', () => {
     await login(page, 'axel_d');
 
     // Clique sur "Proposer un échange" sur une carte de Mira
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
 
     // Le modal de proposition doit s'ouvrir
@@ -54,7 +54,7 @@ test.describe('Négociation — cas usuels', () => {
   test('Mira voit la proposition dans ses échanges reçus', async ({ page }) => {
     // D'abord créer un échange depuis Axel
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Proposition test');
@@ -80,7 +80,7 @@ test.describe('Négociation — cas usuels', () => {
   test('Mira peut accepter une proposition', async ({ page }) => {
     // Axel crée une proposition
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Proposition à accepter');
@@ -105,7 +105,7 @@ test.describe('Négociation — cas usuels', () => {
 
   test('Mira peut refuser une proposition', async ({ page }) => {
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Proposition à refuser');
@@ -127,7 +127,7 @@ test.describe('Négociation — cas usuels', () => {
 
   test('Mira peut faire une contre-proposition', async ({ page }) => {
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Proposition initiale');
@@ -160,7 +160,7 @@ test.describe('Négociation — cas usuels', () => {
 
   test("l'historique des messages est préservé", async ({ page }) => {
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Message initial de la proposition');
@@ -179,7 +179,7 @@ test.describe('Négociation — cas extrêmes', () => {
   test('un long message est accepté et affiché correctement', async ({ page }) => {
     await login(page, 'axel_d');
 
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
 
@@ -193,7 +193,7 @@ test.describe('Négociation — cas extrêmes', () => {
 
   test('une même trade ne peut pas être acceptée deux fois', async ({ page }) => {
     await login(page, 'axel_d');
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Double accept test');
@@ -223,7 +223,7 @@ test.describe('Négociation — cas d\'erreur', () => {
   test('impossible de proposer sans sélectionner de cartes', async ({ page }) => {
     await login(page, 'axel_d');
 
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
 
@@ -244,7 +244,7 @@ test.describe('Négociation — cas d\'erreur', () => {
   test('impossible de proposer sans message', async ({ page }) => {
     await login(page, 'axel_d');
 
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
 
@@ -264,7 +264,7 @@ test.describe('Négociation — cas d\'erreur', () => {
   test("l'initiateur ne peut pas accepter sa propre proposition", async ({ page }) => {
     await login(page, 'axel_d');
 
-    const proposeBtn = page.locator('[data-propose-card]').first();
+    const proposeBtn = page.locator('.card-tile').filter({ hasText: 'Mira K.' }).locator('[data-propose-card]').first();
     await proposeBtn.click();
     await page.waitForSelector('#trade-form');
     await page.fill('#trade-message', 'Test auto-accept');

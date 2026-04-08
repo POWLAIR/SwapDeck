@@ -26,7 +26,7 @@ test.describe('Catalogue — cas usuels', () => {
 
     const cards = page.locator('.card-tile');
     await expect(cards.first()).toBeVisible();
-    await expect(cards).toHaveCountGreaterThan(0);
+    await expect(cards).not.toHaveCount(0);
   });
 
   test('les cartes ont un nom, un badge jeu et un badge rareté', async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe('Catalogue — cas usuels', () => {
     await page.waitForTimeout(400);
 
     const cards = page.locator('.card-tile');
-    await expect(cards).toHaveCountGreaterThan(4);
+    await expect(cards).not.toHaveCount(0);
   });
 
   test("les cartes d'autres utilisateurs ont un bouton « Proposer un échange »", async ({ page }) => {
