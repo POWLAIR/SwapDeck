@@ -9,7 +9,7 @@
 // pour que tx.trade.update === prisma.trade.update et réutiliser les mocks.
 // Le préfixe "mock" est requis par Jest pour les variables référencées dans jest.mock().
 const mockDb = {
-  card:    { findMany: jest.fn(), findUnique: jest.fn() },
+  card:    { findMany: jest.fn(), findUnique: jest.fn(), updateMany: jest.fn() },
   trade:   { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
   message: { create: jest.fn() },
 };
@@ -80,10 +80,20 @@ describe('createTrade', () => {
 // ──────────────────────────────────────────────
 // acceptTrade
 // ──────────────────────────────────────────────
+// Helper : trade avec tradeCards pour les tests d'acceptTrade
+const makeTradeWithCards = (overrides = {}) => ({
+  ...makeTrade(overrides),
+  tradeCards: [
+    { cardId: 10, direction: 'OFFERED' },
+    { cardId: 20, direction: 'REQUESTED' },
+  ],
+});
+
 describe('acceptTrade', () => {
   it('accepte si acteur est le destinataire et status PENDING', async () => {
-    prisma.trade.findUnique.mockResolvedValue(makeTrade());
+    prisma.trade.findUnique.mockResolvedValue(makeTradeWithCards());
     prisma.trade.update.mockResolvedValue(makeTrade({ status: 'ACCEPTED' }));
+    prisma.card.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await service.acceptTrade(1, 2);
 
@@ -93,13 +103,36 @@ describe('acceptTrade', () => {
     expect(result.status).toBe('ACCEPTED');
   });
 
+  it('transfère les cartes OFFERED vers le destinataire et REQUESTED vers l\'initiateur', async () => {
+    prisma.trade.findUnique.mockResolvedValue(makeTradeWithCards());
+    prisma.trade.update.mockResolvedValue(makeTrade({ status: 'ACCEPTED' }));
+    prisma.card.updateMany.mockResolvedValue({ count: 1 });
+
+    await service.acceptTrade(1, 2);
+
+    // Carte OFFERED (id:10) doit aller au destinataire (id:2)
+    expect(prisma.card.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: { in: [10] } },
+        data: { ownerId: 2 },
+      })
+    );
+    // Carte REQUESTED (id:20) doit aller à l'initiateur (id:1)
+    expect(prisma.card.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: { in: [20] } },
+        data: { ownerId: 1 },
+      })
+    );
+  });
+
   it("rejette si l'acteur n'est pas le destinataire", async () => {
-    prisma.trade.findUnique.mockResolvedValue(makeTrade());
+    prisma.trade.findUnique.mockResolvedValue(makeTradeWithCards());
     await expect(service.acceptTrade(1, 1)).rejects.toThrow('UNAUTHORIZED');
   });
 
   it('rejette si la trade est déjà clôturée', async () => {
-    prisma.trade.findUnique.mockResolvedValue(makeTrade({ status: 'ACCEPTED' }));
+    prisma.trade.findUnique.mockResolvedValue(makeTradeWithCards({ status: 'ACCEPTED' }));
     await expect(service.acceptTrade(1, 2)).rejects.toThrow('INVALID_STATUS');
   });
 
@@ -109,7 +142,7 @@ describe('acceptTrade', () => {
   });
 
   it('lève INVALID_STATUS si Prisma retourne P2025 (concurrent accept)', async () => {
-    prisma.trade.findUnique.mockResolvedValue(makeTrade());
+    prisma.trade.findUnique.mockResolvedValue(makeTradeWithCards());
     prisma.trade.update.mockRejectedValue(Object.assign(new Error('P2025'), { code: 'P2025' }));
     await expect(service.acceptTrade(1, 2)).rejects.toThrow('INVALID_STATUS');
   });

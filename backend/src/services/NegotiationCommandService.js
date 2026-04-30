@@ -69,26 +69,60 @@ async function createTrade(initiatorId, recipientId, offeredCardIds, requestedCa
 }
 
 /**
- * Accepte une proposition d'échange.
- * L'update conditionnel sur le statut garantit l'atomicité face à la concurrence :
- * si une autre requête a déjà changé le statut, Prisma lève P2025 → INVALID_STATUS.
+ * Accepte une proposition d'échange et transfère la propriété des cartes.
+ *
+ * Dans une transaction atomique :
+ *   - Le statut passe à ACCEPTED (update conditionnel sur PENDING pour l'atomicité concurrente)
+ *   - Les cartes OFFERED (initiateur → destinataire) changent d'ownerId
+ *   - Les cartes REQUESTED (destinataire → initiateur) changent d'ownerId
+ *
+ * Si une autre requête a déjà changé le statut, Prisma lève P2025 → INVALID_STATUS.
  */
 async function acceptTrade(tradeId, actorId) {
-  const trade = await _getOrThrow(tradeId);
+  const trade = await prisma.trade.findUnique({
+    where: { id: tradeId },
+    include: { tradeCards: true },
+  });
+  if (!trade) throw new Error('NOT_FOUND');
 
   if (trade.recipientId !== actorId) throw new Error('UNAUTHORIZED');
   if (!OPEN_STATUSES.includes(trade.status)) throw new Error('INVALID_STATUS');
 
+  const offeredCardIds = trade.tradeCards
+    .filter((tc) => tc.direction === 'OFFERED')
+    .map((tc) => tc.cardId);
+  const requestedCardIds = trade.tradeCards
+    .filter((tc) => tc.direction === 'REQUESTED')
+    .map((tc) => tc.cardId);
+
   try {
-    return await prisma.trade.update({
-      where: { id: tradeId, status: { in: OPEN_STATUSES } },
-      data: {
-        status: 'ACCEPTED',
-        messages: {
-          create: { authorId: actorId, body: 'Proposition acceptée.', action: 'ACCEPT' },
+    return await prisma.$transaction(async (tx) => {
+      const updatedTrade = await tx.trade.update({
+        where: { id: tradeId, status: { in: OPEN_STATUSES } },
+        data: {
+          status: 'ACCEPTED',
+          messages: {
+            create: { authorId: actorId, body: 'Proposition acceptée.', action: 'ACCEPT' },
+          },
         },
-      },
-      include: _tradeIncludes(),
+        include: _tradeIncludes(),
+      });
+
+      if (offeredCardIds.length) {
+        await tx.card.updateMany({
+          where: { id: { in: offeredCardIds } },
+          data: { ownerId: trade.recipientId },
+        });
+      }
+
+      if (requestedCardIds.length) {
+        await tx.card.updateMany({
+          where: { id: { in: requestedCardIds } },
+          data: { ownerId: trade.initiatorId },
+        });
+      }
+
+      return updatedTrade;
     });
   } catch (e) {
     if (e.code === 'P2025') throw new Error('INVALID_STATUS');
