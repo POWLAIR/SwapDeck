@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SwapDeck</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f18;--surface:#161926;--card:#1c2033;--border:#2a2f4a;
+  --accent:#7c6dfa;--red:#f76c6c;--green:#4ecb89;--gold:#f5c842;--blue:#4db8ff;
+  --text:#dde1f5;--muted:#8990b0;
+  --W:1120px;--H:630px;
+}
+html,body{width:100%;height:100%;background:#060810;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);overflow:hidden;}
+
+#deck{width:var(--W);height:var(--H);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+.slide{position:absolute;inset:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:50px 60px 60px;display:none;flex-direction:column;gap:22px;overflow:hidden;}
+.slide.active{display:flex;}
+.slide::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--red));border-radius:14px 14px 0 0;}
+
+/* num */
+.snum{position:absolute;top:14px;right:60px;font-size:10.5px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:4px;}
+
+/* typography */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+h1{font-size:46px;font-weight:900;line-height:1.1;}
+h2{font-size:30px;font-weight:800;color:var(--text);line-height:1.15;}
+h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.sub{font-size:17px;color:var(--muted);}
+strong{color:var(--text);font-weight:700;}
+.muted{color:var(--muted);}
+.divider{border:none;border-top:1px solid var(--border);}
+code{font-family:'Cascadia Code','Fira Code',monospace;font-size:.88em;background:var(--bg);padding:1px 5px;border-radius:3px;color:var(--blue);}
+
+/* big stat */
+.big-n{font-size:72px;font-weight:900;line-height:1;}
+.big-n.v{color:var(--accent);}
+.big-n.g{color:var(--green);}
+.big-n.o{color:var(--gold);}
+.big-n.b{color:var(--blue);}
+.big-n.r{color:var(--red);}
+.stat-label{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
+/* panel */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;}
+.panel.v{border-color:rgba(124,109,250,.5);}
+.panel.g{border-color:rgba(78,203,137,.4);}
+.panel.o{border-color:rgba(245,200,66,.4);}
+.panel.r{border-color:rgba(247,108,108,.4);}
+.panel.b{border-color:rgba(77,184,255,.4);}
+.panel.dark{background:var(--bg);}
+
+/* grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.center{text-align:center;}
+
+/* pill / tag */
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;}
+.pill.v{background:rgba(124,109,250,.15);color:var(--accent);border:1px solid rgba(124,109,250,.4);}
+.pill.g{background:rgba(78,203,137,.12); color:var(--green); border:1px solid rgba(78,203,137,.4);}
+.pill.o{background:rgba(245,200,66,.12); color:var(--gold);  border:1px solid rgba(245,200,66,.4);}
+.pill.r{background:rgba(247,108,108,.12);color:var(--red);   border:1px solid rgba(247,108,108,.4);}
+.pill.b{background:rgba(77,184,255,.12); color:var(--blue);  border:1px solid rgba(77,184,255,.4);}
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;}
+
+/* flow */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.fbox{padding:6px 14px;border-radius:7px;font-size:13px;font-weight:600;}
+.fbox.v{background:rgba(124,109,250,.12);border:1px solid rgba(124,109,250,.4);color:var(--accent);}
+.fbox.g{background:rgba(78,203,137,.1); border:1px solid rgba(78,203,137,.35);color:var(--green);}
+.fbox.o{background:rgba(245,200,66,.1); border:1px solid rgba(245,200,66,.35); color:var(--gold);}
+.fbox.b{background:rgba(77,184,255,.1); border:1px solid rgba(77,184,255,.35); color:var(--blue);}
+.fbox.n{background:var(--card);border:1px solid var(--border);color:var(--text);}
+.farr{color:var(--muted);font-size:20px;}
+
+/* icon block */
+.icon-block{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px;}
+.icon-e{font-size:36px;}
+.icon-title{font-size:13.5px;font-weight:700;}
+.icon-sub{font-size:11.5px;color:var(--muted);}
+
+/* key-value row */
+.kv{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv-k{font-size:13px;font-weight:700;min-width:130px;flex-shrink:0;}
+.kv-v{font-size:13px;color:var(--muted);}
+
+/* rarity bar */
+.rar-row{display:flex;gap:0;border-radius:8px;overflow:hidden;height:32px;}
+.rar-seg{flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+/* nav */
+#nav{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(22,25,38,.96);border:1px solid var(--border);border-radius:99px;padding:6px 14px;backdrop-filter:blur(8px);z-index:100;}
+#nav button{background:none;border:none;color:var(--text);font-size:17px;cursor:pointer;padding:2px 6px;border-radius:5px;transition:background .15s;}
+#nav button:hover{background:var(--border);}
+#nav button:disabled{opacity:.3;cursor:default;}
+#ctr{font-size:12px;color:var(--muted);min-width:46px;text-align:center;}
+#timer{font-size:12px;color:var(--gold);min-width:32px;text-align:right;font-variant-numeric:tabular-nums;}
+.sep{width:1px;height:14px;background:var(--border);}
+#prog{position:fixed;bottom:0;left:0;right:0;height:3px;background:var(--border);z-index:100;}
+#pf{height:100%;background:linear-gradient(90deg,var(--accent),var(--red));transition:width .3s;}
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- ═══════════════════════════════════════
+  1 · TITRE
+═══════════════════════════════════════ -->
+<div class="slide active" style="justify-content:center;gap:20px;">
+  <div style="font-size:64px;line-height:1;">🃏</div>
+  <h1>SwapDeck</h1>
+  <p class="sub">Troc de cartes à collectionner · Aucun flux monétaire</p>
+  <div class="pill-row" style="margin-top:4px;">
+    <span class="pill v">🔥 Pokémon</span>
+    <span class="pill v">✨ Magic</span>
+    <span class="pill v">⚡ Yu-Gi-Oh!</span>
+    <span class="pill v">🌙 Digimon</span>
+  </div>
+  <hr class="divider"/>
+  <p style="font-size:14px;color:var(--muted);">Paul Claverie</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+  2 · OBJETS ÉCHANGÉS
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">2 / 13</span>
+  <div class="eyebrow">Les objets</div>
+  <h2>Les cartes à collectionner</h2>
+
+  <div class="g2" style="flex:1;align-items:stretch;">
+
+    <!-- Carte visuelle -->
+    <div class="panel v" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="background:linear-gradient(135deg,#1a1040,#0d2040);border-radius:10px;padding:20px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+        <div style="font-size:48px;">🔥</div>
+        <div style="font-size:15px;font-weight:700;">Charizard ex</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+          <span class="pill r" style="font-size:11px;padding:2px 8px;">POKÉMON</span>
+          <span class="pill o" style="font-size:11px;padding:2px 8px;">✸ Secrète</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Dragon Full Art · SwapDeck</div>
+      </div>
+    </div>
+
+    <!-- Attributs + rareté -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <h3>Attributs requis</h3>
+        <div class="kv"><span class="kv-k">📝 Titre</span></div>
+        <div class="kv"><span class="kv-k">📄 Description</span></div>
+        <div class="kv"><span class="kv-k">🎮 Catégorie</span></div>
+        <div class="kv"><span class="kv-k">🖼️ Image</span></div>
+        <div class="kv"><span class="kv-k">👤 Propriétaire</span></div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-bottom:10px;">5 niveaux de rareté</h3>
+        <div class="rar-row">
+          <div class="rar-seg" style="background:#1e2535;color:#90a0b0;">Commune</div>
+          <div class="rar-seg" style="background:#1a3028;color:var(--green);">Peu commune</div>
+          <div class="rar-seg" style="background:#1a2840;color:var(--blue);">Rare</div>
+          <div class="rar-seg" style="background:#2a1e40;color:#b39ddb;">Ultra Rare</div>
+          <div class="rar-seg" style="background:#302010;color:var(--gold);">✸ Secrète</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  3 · VALEUR D'ÉCHANGE
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">3 / 13</span>
+  <div class="eyebrow">Valeur d'échange</div>
+  <h2>Pas de prix — la négociation fixe la valeur</h2>
+
+  <div class="g2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel o" style="text-align:center;padding:24px;">
+        <div style="font-size:42px;margin-bottom:8px;">✸</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gold);">Rareté</div>
+      </div>
+      <div class="panel" style="text-align:center;padding:18px;">
+        <div style="font-size:36px;margin-bottom:6px;">🎮</div>
+        <div style="font-size:15px;font-weight:700;">Licence</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel v" style="text-align:center;padding:24px;">
+        <div style="font-size:42px;margin-bottom:8px;">💬</div>
+        <div style="font-size:16px;font-weight:700;color:var(--accent);">Message de justification</div>
+      </div>
+      <div class="panel g" style="text-align:center;padding:18px;">
+        <div style="font-size:36px;margin-bottom:6px;">↩</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green);">Contre-proposition</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel dark" style="text-align:center;padding:12px;">
+    <span style="font-size:15px;font-weight:700;color:var(--muted);">Aucun algorithme de prix &nbsp;·&nbsp; <strong style="color:var(--text);">Troc pur</strong></span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  4 · MVP
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">4 / 13</span>
+  <div class="eyebrow">MVP</div>
+  <h2>Le parcours utilisateur</h2>
+
+  <!-- Flow principal -->
+  <div class="flow" style="justify-content:center;gap:6px;padding:8px 0;">
+    <div class="fbox v" style="font-size:15px;padding:10px 18px;">🔐 Connexion</div>
+    <div class="farr">→</div>
+    <div class="fbox n" style="font-size:15px;padding:10px 18px;">📖 Catalogue</div>
+    <div class="farr">→</div>
+    <div class="fbox v" style="font-size:15px;padding:10px 18px;">🤝 Proposer</div>
+    <div class="farr">→</div>
+    <div class="fbox o" style="font-size:15px;padding:10px 18px;">💬 Négocier</div>
+    <div class="farr">→</div>
+    <div class="fbox g" style="font-size:15px;padding:10px 18px;">✓ Accord</div>
+  </div>
+
+  <div class="g3">
+    <div class="panel" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">👤</div>
+      <div style="font-weight:700;margin-bottom:6px;">4 utilisateurs</div>
+      <div class="pill-row" style="justify-content:center;">
+        <span class="pill v" style="font-size:11px;">🔥 Axel</span>
+        <span class="pill o" style="font-size:11px;">✨ Mira</span>
+        <span class="pill g" style="font-size:11px;">⚡ Soren</span>
+        <span class="pill b" style="font-size:11px;">🌙 Camille</span>
+      </div>
+    </div>
+
+    <div class="panel" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">🃏</div>
+      <div style="font-weight:700;margin-bottom:6px;">28 cartes en base</div>
+      <div class="pill-row" style="justify-content:center;">
+        <span class="pill v" style="font-size:11px;">Pokémon ×10</span>
+        <span class="pill v" style="font-size:11px;">Magic ×8</span>
+        <span class="pill v" style="font-size:11px;">YGO ×5</span>
+        <span class="pill v" style="font-size:11px;">Digi ×5</span>
+      </div>
+    </div>
+
+    <div class="panel" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">🔄</div>
+      <div style="font-weight:700;margin-bottom:6px;">Échange complet</div>
+      <div class="pill-row" style="justify-content:center;">
+        <span class="pill g" style="font-size:11px;">Accepter</span>
+        <span class="pill r" style="font-size:11px;">Refuser</span>
+        <span class="pill o" style="font-size:11px;">Contre-prop.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  5 · FONCTIONNALITÉS +/-
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">5 / 13</span>
+  <div class="eyebrow">Choix de conception</div>
+  <h2>Au-delà des consignes</h2>
+
+  <div class="g3" style="flex:1;align-items:stretch;">
+    <div class="panel g" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);">✚ Ajouté</div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🖼️</div>
+        <div class="icon-title">Images réelles</div>
+        <div class="icon-sub">PokéTCG · Scryfall · YGOPRODeck</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🔍</div>
+        <div class="icon-title">Recherche textuelle</div>
+        <div class="icon-sub">Debounce 220 ms</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🔔</div>
+        <div class="icon-title">Badge de notification</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🔗</div>
+        <div class="icon-title">Chaîne de négo</div>
+      </div>
+    </div>
+
+    <div class="panel o" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);">✎ Amélioré</div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">⚠️</div>
+        <div class="icon-title">Erreurs inline</div>
+        <div class="icon-sub">Fini <code>window.alert()</code></div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">☑️</div>
+        <div class="icon-title">Présélection</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">⏳</div>
+        <div class="icon-title">États de chargement</div>
+      </div>
+    </div>
+
+    <div class="panel r" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);">✖ Hors périmètre</div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🚫</div>
+        <div class="icon-title">Inscription</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🚫</div>
+        <div class="icon-title">Interface admin</div>
+      </div>
+      <div class="icon-block" style="padding:0;">
+        <div style="font-size:28px;">🚫</div>
+        <div class="icon-title">Temps réel (WS)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  6 · TESTS FONCTIONNELS
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">6 / 13</span>
+  <div class="eyebrow">Tests E2E — Playwright</div>
+  <h2>Tests fonctionnels</h2>
+
+  <div class="g2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:14px;justify-content:center;align-items:center;">
+      <div style="text-align:center;">
+        <div class="big-n v">23</div>
+        <div class="stat-label" style="font-size:14px;">tests E2E · Chromium</div>
+      </div>
+      <div class="g2" style="width:100%;">
+        <div class="panel" style="text-align:center;">
+          <div style="font-size:28px;font-weight:800;color:var(--accent);">12</div>
+          <div style="font-size:12px;color:var(--muted);">catalog.spec.js</div>
+        </div>
+        <div class="panel" style="text-align:center;">
+          <div style="font-size:28px;font-weight:800;color:var(--accent);">11</div>
+          <div style="font-size:12px;color:var(--muted);">negotiation.spec.js</div>
+        </div>
+      </div>
+      <div class="g3" style="width:100%;">
+        <div class="panel g" style="text-align:center;padding:12px;">
+          <div style="font-size:22px;">🟢</div>
+          <div style="font-size:12px;font-weight:700;margin-top:4px;">Cas usuels</div>
+        </div>
+        <div class="panel o" style="text-align:center;padding:12px;">
+          <div style="font-size:22px;">🟡</div>
+          <div style="font-size:12px;font-weight:700;margin-top:4px;">Cas extrêmes</div>
+        </div>
+        <div class="panel r" style="text-align:center;padding:12px;">
+          <div style="font-size:22px;">🔴</div>
+          <div style="font-size:12px;font-weight:700;margin-top:4px;">Cas d'erreur</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="overflow:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <thead>
+          <tr>
+            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-weight:700;">Scénario</th>
+            <th style="padding:6px 10px;text-align:center;border-bottom:2px solid var(--border);color:var(--muted);font-weight:700;">🟢</th>
+            <th style="padding:6px 10px;text-align:center;border-bottom:2px solid var(--border);color:var(--muted);font-weight:700;">🟡</th>
+            <th style="padding:6px 10px;text-align:center;border-bottom:2px solid var(--border);color:var(--muted);font-weight:700;">🔴</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Catalogue</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Filtres</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--muted);">—</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Proposition</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--muted);">—</td><td style="text-align:center;color:var(--green);">✓</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Acceptation / Refus</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Contre-proposition</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--muted);">—</td><td style="text-align:center;color:var(--muted);">—</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);">Historique</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--green);">✓</td><td style="text-align:center;color:var(--muted);">—</td></tr>
+          <tr><td style="padding:5px 10px;">Accès / API down</td><td style="text-align:center;color:var(--muted);">—</td><td style="text-align:center;color:var(--muted);">—</td><td style="text-align:center;color:var(--green);">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  7 · CQRS
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">7 / 13</span>
+  <div class="eyebrow">Architecture</div>
+  <h2>Pattern CQRS</h2>
+
+  <div style="display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;flex:1;gap:0;">
+
+    <div class="panel r" style="height:100%;display:flex;flex-direction:column;gap:12px;padding:22px;">
+      <div style="text-align:center;">
+        <div style="font-size:36px;">⚡</div>
+        <div style="font-size:16px;font-weight:800;color:var(--red);margin-top:4px;">CommandService</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div class="pill r" style="justify-content:center;font-size:12px;">createTrade()</div>
+        <div class="pill r" style="justify-content:center;font-size:12px;">acceptTrade()</div>
+        <div class="pill r" style="justify-content:center;font-size:12px;">refuseTrade()</div>
+        <div class="pill r" style="justify-content:center;font-size:12px;">counterTrade()  🔒 transaction</div>
+        <div class="pill r" style="justify-content:center;font-size:12px;">cancelTrade()</div>
+        <div class="pill r" style="justify-content:center;font-size:12px;">addMessage()</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:28px;color:var(--muted);">⟷</div>
+
+    <div class="panel b" style="height:100%;display:flex;flex-direction:column;gap:12px;padding:22px;">
+      <div style="text-align:center;">
+        <div style="font-size:36px;">🔍</div>
+        <div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:4px;">QueryService</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div class="pill b" style="justify-content:center;font-size:12px;">getTradesForUser()  paginé</div>
+        <div class="pill b" style="justify-content:center;font-size:12px;">getTradeById()</div>
+        <div class="pill b" style="justify-content:center;font-size:12px;">getTradesByCard()</div>
+        <div class="pill b" style="justify-content:center;font-size:12px;">getMessagesByTrade()</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel dark" style="padding:10px 18px;text-align:center;">
+    <span style="font-size:14px;color:var(--muted);"><strong style="color:var(--text);">Atomicité</strong> &nbsp;·&nbsp; <code>status=PENDING</code> &nbsp;·&nbsp; HTTP <strong style="color:var(--red);">409</strong> si concurrence</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  8 · TESTS UNITAIRES
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">8 / 13</span>
+  <div class="eyebrow">Tests unitaires — Jest</div>
+  <h2>49 tests · Prisma entièrement mocké</h2>
+
+  <div class="g2" style="flex:1;align-items:center;">
+
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+      <div style="text-align:center;">
+        <div class="big-n g">49</div>
+        <div class="stat-label" style="font-size:14px;">tests Jest · 0 vraie BDD</div>
+      </div>
+      <div class="panel" style="width:100%;">
+        <h3 style="margin-bottom:10px;font-size:13px;color:var(--muted);">Mock Prisma</h3>
+        <div style="background:#080c16;border:1px solid var(--border);border-radius:6px;padding:12px;font-family:'Cascadia Code','Fira Code',monospace;font-size:12px;line-height:1.55;color:#bec7e8;">
+          <span style="color:#546e8a;">// jest.mock('../config/db')</span><br>
+          prisma.trade.update<br>
+          &nbsp;&nbsp;.<span style="color:#80cbc4;">mockResolvedValueOnce</span>({<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;id: 1, status: <span style="color:#a5d6a7;">'ACCEPTED'</span><br>
+          &nbsp;&nbsp;});
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="height:100%;overflow:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr>
+            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);">Méthode</th>
+            <th style="padding:6px 10px;text-align:center;border-bottom:2px solid var(--border);color:var(--green);">#</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>createTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">5</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>acceptTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">5</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>refuseTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">4</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>counterTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">6</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>cancelTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">4</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>addMessage</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">4</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>getTradesForUser</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">5</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>getTradeById</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">4</td></tr>
+          <tr><td style="padding:5px 10px;border-bottom:1px solid var(--border);"><code>getTradesByCard</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;border-bottom:1px solid var(--border);">3</td></tr>
+          <tr><td style="padding:5px 10px;"><code>getMessagesByTrade</code></td><td style="text-align:center;color:var(--green);padding:5px 10px;">3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  9 · TESTS DE CHARGE
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">9 / 13</span>
+  <div class="eyebrow">Tests de charge — k6</div>
+  <h2>3 scénarios</h2>
+
+  <div class="g3" style="flex:1;">
+    <div class="panel v" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;">
+      <div style="font-size:42px;">📖</div>
+      <div style="font-size:15px;font-weight:700;">Catalogue</div>
+      <div class="big-n v" style="font-size:48px;">30</div>
+      <div class="stat-label">utilisateurs virtuels</div>
+      <div style="font-size:12px;color:var(--muted);">1 min 30</div>
+    </div>
+
+    <div class="panel r" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;">
+      <div style="font-size:42px;">⚔️</div>
+      <div style="font-size:15px;font-weight:700;">Concurrence</div>
+      <div class="big-n r" style="font-size:48px;">10</div>
+      <div class="stat-label">VUs · même trade</div>
+      <div style="font-size:12px;color:var(--muted);">Anti double-accept</div>
+    </div>
+
+    <div class="panel g" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;">
+      <div style="font-size:42px;">🔄</div>
+      <div style="font-size:15px;font-weight:700;">Workflow complet</div>
+      <div class="big-n g" style="font-size:48px;">20</div>
+      <div class="stat-label">VUs · bout en bout</div>
+      <div style="font-size:12px;color:var(--muted);">2 min</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="panel dark" style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);">Seuil p95</div>
+      <div style="font-size:28px;font-weight:800;color:var(--gold);">&lt; 500 ms</div>
+    </div>
+    <div class="panel dark" style="text-align:center;">
+      <div style="font-size:13px;font-weight:700;color:var(--green);">Taux d'erreur</div>
+      <div style="font-size:28px;font-weight:800;color:var(--green);">&lt; 1 %</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  10 · PIPELINE CI
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">10 / 13</span>
+  <div class="eyebrow">GitHub Actions · git push → pipeline</div>
+  <h2>Pipeline CI</h2>
+
+  <div style="display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;align-items:stretch;flex:1;gap:0;">
+
+    <div class="panel g" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:22px;">
+      <div style="font-size:40px;">🧪</div>
+      <div style="font-size:15px;font-weight:800;color:var(--green);">① Jest</div>
+      <div class="big-n g" style="font-size:40px;">49</div>
+      <div style="font-size:12px;color:var(--muted);">Prisma mocké · ~10 s</div>
+      <div class="pill g" style="font-size:11px;">🔒 Bloquant</div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);">→</div>
+
+    <div class="panel v" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:22px;">
+      <div style="font-size:40px;">🎭</div>
+      <div style="font-size:15px;font-weight:800;color:var(--accent);">② Playwright</div>
+      <div class="big-n v" style="font-size:40px;">23</div>
+      <div style="font-size:12px;color:var(--muted);">PostgreSQL · Seed · ~25 s</div>
+      <div class="pill v" style="font-size:11px;">🔒 Bloquant</div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);">→</div>
+
+    <div class="panel o" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:22px;">
+      <div style="font-size:40px;">⚡</div>
+      <div style="font-size:15px;font-weight:800;color:var(--gold);">③ k6</div>
+      <div class="big-n o" style="font-size:40px;">3</div>
+      <div style="font-size:12px;color:var(--muted);">DB isolée · Serveur Node · ~30 s</div>
+      <div class="pill o" style="font-size:11px;">continue-on-error</div>
+    </div>
+
+  </div>
+
+  <div class="g2">
+    <div class="panel dark" style="text-align:center;">
+      <div style="font-size:13px;color:var(--muted);">Artefacts · <strong style="color:var(--text);">7 jours</strong> &nbsp;·&nbsp; Screenshots &amp; vidéos</div>
+    </div>
+    <div class="panel dark" style="text-align:center;">
+      <div style="font-size:13px;color:var(--muted);">Health check &nbsp;<code>/api/images/card</code></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  11 · DÉMO
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">11 / 13</span>
+  <div class="eyebrow">Prototype</div>
+  <h2>Démo live</h2>
+
+  <div class="g2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel dark" style="text-align:center;padding:18px;">
+        <code style="font-size:14px;">docker compose up -d</code>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px;">→ <strong>localhost:8080</strong></div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-bottom:12px;font-size:13px;color:var(--muted);">Scénario de démo</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="flow"><div class="fbox v">1. Axel</div><div class="farr" style="font-size:14px;">→</div><div style="font-size:13px;">Catalogue · filtre Pokémon</div></div>
+          <div class="flow"><div class="fbox v">2.</div><div class="farr" style="font-size:14px;">→</div><div style="font-size:13px;">Proposer à Mira · message</div></div>
+          <div class="flow"><div class="fbox o">3. Mira</div><div class="farr" style="font-size:14px;">→</div><div style="font-size:13px;">Voir la notification · fil</div></div>
+          <div class="flow"><div class="fbox o">4.</div><div class="farr" style="font-size:14px;">→</div><div style="font-size:13px;">Contre-proposition</div></div>
+          <div class="flow"><div class="fbox g">5. Axel</div><div class="farr" style="font-size:14px;">→</div><div style="font-size:13px;">Accepter · ✓ Accord</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel v" style="text-align:center;padding:22px;">
+        <div style="font-size:32px;margin-bottom:8px;">🖼️</div>
+        <div style="font-weight:700;">Images réelles</div>
+      </div>
+      <div class="panel g" style="text-align:center;padding:22px;">
+        <div style="font-size:32px;margin-bottom:8px;">↩</div>
+        <div style="font-weight:700;">Chaîne de contre-propositions</div>
+      </div>
+      <div class="panel" style="text-align:center;padding:18px;">
+        <div style="font-size:28px;margin-bottom:6px;">📜</div>
+        <div style="font-weight:700;">Historique complet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  12 · AXES D'AMÉLIORATION
+═══════════════════════════════════════ -->
+<div class="slide">
+  <span class="snum">12 / 13</span>
+  <div class="eyebrow">Perspectives</div>
+  <h2>Et ensuite ?</h2>
+
+  <div class="g4" style="flex:1;align-items:stretch;">
+    <div class="panel v" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">🔔</div>
+      <div style="font-size:14px;font-weight:700;">Notifications<br>temps réel</div>
+      <div style="font-size:12px;color:var(--muted);">WebSocket / SSE</div>
+    </div>
+
+    <div class="panel g" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">⭐</div>
+      <div style="font-size:14px;font-weight:700;">Système de<br>réputation</div>
+      <div style="font-size:12px;color:var(--muted);">Note post-échange</div>
+    </div>
+
+    <div class="panel o" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">💰</div>
+      <div style="font-size:14px;font-weight:700;">Cotation<br>automatique</div>
+      <div style="font-size:12px;color:var(--muted);">API TCGPlayer</div>
+    </div>
+
+    <div class="panel r" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">🔒</div>
+      <div style="font-size:14px;font-weight:700;">Authentification<br>complète</div>
+      <div style="font-size:12px;color:var(--muted);">JWT · Email</div>
+    </div>
+
+    <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">🖼️</div>
+      <div style="font-size:14px;font-weight:700;">Upload<br>d'image</div>
+      <div style="font-size:12px;color:var(--muted);">Photo de la carte physique</div>
+    </div>
+
+    <div class="panel b" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">🎯</div>
+      <div style="font-size:14px;font-weight:700;">Wishlist /<br>Matching</div>
+      <div style="font-size:12px;color:var(--muted);">Suggestions automatiques</div>
+    </div>
+
+    <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">⚙️</div>
+      <div style="font-size:14px;font-weight:700;">Interface<br>admin</div>
+      <div style="font-size:12px;color:var(--muted);">CRUD sans seed</div>
+    </div>
+
+    <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;">
+      <div style="font-size:38px;">📊</div>
+      <div style="font-size:14px;font-weight:700;">Statistiques<br>publiques</div>
+      <div style="font-size:12px;color:var(--muted);">Cartes les plus échangées</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  13 · CONCLUSION
+═══════════════════════════════════════ -->
+<div class="slide" style="justify-content:center;align-items:center;gap:24px;text-align:center;">
+  <div style="font-size:60px;">🃏</div>
+  <h1>Merci !</h1>
+  <p class="sub">SwapDeck · github.com/POWLAIR/SwapDeck</p>
+  <hr class="divider" style="width:100%;"/>
+  <div class="g4" style="width:100%;">
+    <div class="panel" style="text-align:center;">
+      <div class="big-n v" style="font-size:48px;">28</div>
+      <div class="stat-label">cartes</div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <div class="big-n g" style="font-size:48px;">49</div>
+      <div class="stat-label">tests Jest</div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <div class="big-n b" style="font-size:48px;">23</div>
+      <div class="stat-label">tests E2E</div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <div class="big-n o" style="font-size:48px;">3</div>
+      <div class="stat-label">scénarios k6</div>
+    </div>
+  </div>
+  <p style="font-size:15px;color:var(--muted);">Questions ?</p>
+</div>
+
+</div><!-- /#deck -->
+
+<div id="nav">
+  <button id="pp" disabled>&#8592;</button>
+  <span id="ctr">1 / 13</span>
+  <button id="pn">&#8594;</button>
+  <div class="sep"></div>
+  <button id="pt" title="Chrono">⏱</button>
+  <span id="timer">0:00</span>
+</div>
+<div id="prog"><div id="pf" style="width:7.69%"></div></div>
+
+<script>
+const slides=document.querySelectorAll('.slide'),N=slides.length;let cur=0;
+function go(n){slides[cur].classList.remove('active');cur=Math.max(0,Math.min(N-1,n));slides[cur].classList.add('active');document.getElementById('ctr').textContent=`${cur+1} / ${N}`;document.getElementById('pp').disabled=cur===0;document.getElementById('pn').disabled=cur===N-1;document.getElementById('pf').style.width=`${(cur+1)/N*100}%`;}
+document.getElementById('pp').addEventListener('click',()=>go(cur-1));
+document.getElementById('pn').addEventListener('click',()=>go(cur+1));
+document.addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();go(cur+1);}if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();go(cur-1);}if(e.key==='Home')go(0);if(e.key==='End')go(N-1);});
+let tiv=null,trun=false,tel=0;
+const te=document.getElementById('timer'),tb=document.getElementById('pt');
+tb.addEventListener('click',()=>{if(!trun){trun=true;tb.textContent='⏹';tiv=setInterval(()=>{tel++;const m=Math.floor(tel/60),s=tel%60;te.textContent=`${m}:${String(s).padStart(2,'0')}`;te.style.color=tel>900?'var(--red)':tel>780?'var(--red)':'var(--gold)';},1000);}else{clearInterval(tiv);trun=false;tel=0;te.textContent='0:00';te.style.color='var(--gold)';tb.textContent='⏱';}});
+</script>
+</body>
+</html>
